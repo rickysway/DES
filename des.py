@@ -2,7 +2,10 @@ import numpy as np
 
 def create16Keys(key):
     '''
-    Returns an array of 16 48-bit keys
+    key(string)
+        - Binary string of 1's or 0's and 64 characters long
+    Return(array[float])
+        - Nested array of 16 48-bit keys in float representation
     '''
     keytab1 = [38, 28, 30, 34,  4, 21,  6,
                51, 13,  1, 55,  7, 17, 42,
@@ -11,7 +14,7 @@ def create16Keys(key):
                5, 10, 54, 44, 37, 47,  14,
                20, 59, 27, 45, 35, 60, 62,
                39, 50,  3, 46, 12, 18, 11,
-               22, 23, 33, 63, 52, 31, 61]
+               22, 23, 33, 63, 52, 31, 61] #CP1
     keytab2 = [ 7,  3, 45,  5, 22, 38, 
                40, 23, 19,  9, 31, 37,
                24, 21, 55, 30, 53, 46,
@@ -19,7 +22,7 @@ def create16Keys(key):
                32, 28, 12, 49, 20,  0, 
                 1,  4, 42, 44, 13, 16, 
                26, 17, 11, 43, 41, 35, 
-               50, 10, 33, 14,  8, 51]
+               50, 10, 33, 14,  8, 51] #CP2
     lsTable = [1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1]
     
     #Map 56 bits from the 64-bit key
@@ -127,7 +130,7 @@ def des(message, key, encryption = True):
     binKey = list(''.join(format(ord(digit), '08b') for digit in key))
     
     if encryption:
-        #Pad messages that do not convert into 64-bit blocks
+        #Pad messages that do not split into 64-bit blocks
         if (len(message)%8) != 0:
             message += (8-(len(message)%8)) * ' '
         #Convert message from string to binary
@@ -174,7 +177,6 @@ def des(message, key, encryption = True):
             #Convert and remap string representation of 32-bits to float representation
             permutedr = []
             [permutedr.append(float(remappedr[pos-1])) for pos in tab3]
-			#Convert lmsg from string to float
             floatlmsg = []
             [floatlmsg.append(float(char)) for char in lmsg]
             #XOR left and newly calculated and mapped right halves of the message bits
@@ -183,21 +185,21 @@ def des(message, key, encryption = True):
             rmsg = newrmsg
         concMsg = np.concatenate((rmsg, lmsg))
         finalPerm = []
-		#Map final binary sequence, converting from array to string
         [finalPerm.append(concMsg[pos-1]) for pos in tab4]
+        #Map final binary sequence, converting from array to string
         binFinalMsg = ''.join(format(str(int(char)), 's') for char in finalPerm)
-		if encryption:
-			#Convert to hex if encryption
+        if encryption:
+            #Convert to hex if encryption
             messageReturn.append((16-len(hex(int(binFinalMsg, 2))[2:]))*'0' + hex(int(binFinalMsg, 2))[2:])
         else:
-			#Convert to string if decryption
+            #Convert to string if decryption
             [messageReturn.append(chr(int(binFinalMsg[byte: byte+8], 2))) for byte in range(0, len(binFinalMsg), 8)]
     return ''.join(messageReturn)
 
 encryption = input("Is this encryption? (y/n)\n")
 if (encryption != 'y') and (encryption != 'n'):
-    print("You chose: ", encryption ,",not y or n")
-    quit()
+    print("You chose: ", encryption ,",not (y) or (n)")
+    return
 if encryption == 'y':
     inputMessage = input("Enter input string message:\n")
     inputKey = input("Enter your 8 character encryption key:\n")
@@ -208,7 +210,6 @@ if encryption == 'n':
     encrypt = False
 if len(inputKey) != 8:
     print("Your secret key is", len(inputKey), "characters long\nExpected 8 characters")
-    quit()
 
 message = des(inputMessage, inputKey, encrypt)
 if message != None:
